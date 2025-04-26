@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Systém pre navolávanie klientov</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    body {
+      padding-top: 20px;
+      padding-bottom: 50px;
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+    }
+    .container {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+      padding: 25px;
+    }
+    .tab-content {
+      padding: 20px;
+      border: 1px solid #dee2e6;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      background-color: white;
+    }
+    .client-row {
+      cursor: pointer;
+    }
+    .client-row:hover {
+      background-color: #f0f7ff !important;
+      transition: background-color 0.2s;
+    }
+    .search-form {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+    }
+    .call-history-title {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .history-table {
+      margin-top: 20px;
+    }
+    .truncate {
+      max-width: 250px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 5px;
+    }
+    
+    /* Štýly pre stránkovanie */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+      gap: 8px;
+    }
+    
+    .pagination-info {
+      margin-bottom: 10px;
+      padding: 8px 15px;
+      background-color: #f0f7ff;
+      border-radius: 4px;
+      font-size: 14px;
+      text-align: right;
+      color: #495057;
+      font-weight: 500;
+      border-left: 3px solid #0d6efd;
+    }
+    
+    .pagination button {
+      min-width: 40px;
+      height: 40px;
+      border: 1px solid #dee2e6;
+      background-color: white;
+      cursor: pointer;
+      border-radius: 4px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .pagination button.active {
+      background-color: #0d6efd;
+      color: white;
+      border-color: #0d6efd;
+    }
+    
+    .pagination button:hover:not(.active) {
+      background-color: #e9ecef;
+    }
+    
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    /* Vylepšenia pre tabuľku */
+    .table-container {
+      border-radius: 5px;
+      overflow-x: auto;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+      max-width: 100%;
+      padding-bottom: 10px;
+    }
+    
+    .sticky-col {
+      position: sticky;
+      left: 0;
+      background-color: #fff;
+      z-index: 5;
+      border-right: 1px solid #dee2e6;
+    }
+    
+    .sticky-col.shade {
+      background-color: #f8f9fa;
+    }
+    
+    /* Zobrazenie poznámky v samostatnej bunke */
+    .note-cell {
+      max-width: 200px;
+      min-width: 150px;
+      position: relative;
+    }
+    
+    .note-content {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+    
+    .note-content:hover {
+      text-decoration: underline;
+      color: #0d6efd;
+    }
+    
+    /* Modal pre poznámky */
+    .note-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    
+    .note-modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      width: 50%;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .note-modal-close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .note-modal-close:hover {
+      color: #555;
+    }
+    
+    .note-modal-body {
+      margin: 15px 0;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+    
+    /* Pridajte doplnkové veľkosti pre stĺpce */
+    .col-id { width: 40px; min-width: 40px; }
+    .col-firma { width: 200px; min-width: 150px; }
+    .col-telefon { width: 120px; min-width: 110px; }
+    .col-email { width: 180px; min-width: 150px; }
+    .col-address { width: 220px; min-width: 180px; }
+    .col-web { width: 60px; min-width: 60px; }
+    .col-poznamka { width: 180px; min-width: 150px; }
+    .col-status { width: 90px; min-width: 90px; }
+    .col-akcie { width: 110px; min-width: 110px; }
+    
+    .badge {
+      font-weight: 500;
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+    
+    /* Farebné pozadie pre striedavé riadky */
+    .table-hover tbody tr:nth-of-type(even) {
+      background-color: rgba(0, 0, 0, 0.01);
+    }
+    
+    .table-striped > tbody > tr:nth-of-type(odd) {
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    table.table {
+      margin-bottom: 0;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 1200px; /* Minimálna šírka, aby sa zabezpečilo scrollovanie */
+    }
+    
+    table.table thead th {
+      background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+      color: #495057;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.5px;
+      border-top: none;
+      border-bottom: 2px solid #dee2e6;
+      padding: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    table.table tbody td {
+      vertical-align: middle;
+      padding: 12px;
+      border-top: 1px solid #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="text-center mb-4">Systém pre navolávanie klientov</h1>
+    
+    <ul class="nav nav-tabs" id="mainTabs">
+      <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#clients" data-tab="clients">Klienti</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#calls" data-tab="calls">História hovorov</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#newCall" data-tab="newCall">Nový hovor</a>
+      </li>
+    </ul>
+    
+    <div class="tab-content">
+      <!-- Záložka s klientmi -->
+      <div id="clients" class="tab-pane fade show active">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Zoznam klientov</h5>
+            <div>
+              <div class="input-group">
+                <input type="text" id="searchInput" class="form-control" placeholder="Hľadať...">
+                <button class="btn btn-outline-secondary" type="button" id="searchButton">
+                  <i class="bi bi-search"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-container">
+              <table class="table table-hover table-striped" id="clientsTable">
+                <thead>
+                  <tr>
+                    <th class="col-id">ID</th>
+                    <th class="col-firma">Firma</th>
+                    <th class="col-telefon">Telefón</th>
+                    <th class="col-email">Email</th>
+                    <th class="col-address">Adresa</th>
+                    <th class="col-web">Web</th>
+                    <th class="col-poznamka">Poznámka</th>
+                    <th class="col-status">Status</th>
+                    <th class="col-akcie">Akcie</th>
+                  </tr>
+                </thead>
+                <tbody id="clientsTableBody">
+                  <!-- Dáta sa načítajú dynamicky -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Informácie o stránkovaní -->
+        <div class="pagination-info" id="paginationInfo">
+          Zobrazené záznamy: <span id="displayedClients">0</span> z <span id="totalClients">0</span>
+        </div>
+        
+        <!-- Stránkovanie -->
+        <div class="pagination" id="pagination">
+          <!-- Stránkovanie sa generuje dynamicky -->
+        </div>
+      </div>
+      
+      <!-- Záložka s históriou hovorov -->
+      <div id="calls" class="tab-pane fade">
+        <div id="callHistoryContainer">
+          <h3>História hovorov</h3>
+          <div class="table-responsive">
+            <table class="table table-hover" id="callsTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Klient</th>
+                  <th>Dátum</th>
+                  <th>Trvanie (min)</th>
+                  <th>Poznámky</th>
+                  <th>Výsledok</th>
+                  <th>Akcie</th>
+                </tr>
+              </thead>
+              <tbody id="callsTableBody">
+                <!-- Dáta sa načítajú dynamicky -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Záložka s novým hovorom -->
+      <div id="newCall" class="tab-pane fade">
+        <h3 id="newCallTitle">Nový hovor</h3>
+        
+        <form id="newCallForm">
+          <input type="hidden" id="editCallId" value="">
+          
+          <div class="mb-3">
+            <label for="clientId" class="form-label">Klient</label>
+            <select class="form-select" id="clientId" required>
+              <option value="">Vyberte klienta</option>
+              <!-- Dáta sa načítajú dynamicky -->
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label for="date" class="form-label">Dátum a čas</label>
+            <input type="datetime-local" class="form-control" id="date" required>
+          </div>
+          
+          <div class="mb-3">
+            <label for="duration" class="form-label">Trvanie (minúty)</label>
+            <input type="number" class="form-control" id="duration" required min="1">
+          </div>
+          
+          <div class="mb-3">
+            <label for="outcome" class="form-label">Výsledok</label>
+            <select class="form-select" id="outcome" required>
+              <option value="Úspešný">Úspešný</option>
+              <option value="Neúspešný">Neúspešný</option>
+              <option value="Zanechaná správa">Zanechaná správa</option>
+              <option value="Nedostupný">Nedostupný</option>
+              <option value="Dohodnúť neskôr">Dohodnúť neskôr</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label for="notes" class="form-label">Poznámky</label>
+            <textarea class="form-control" id="notes" rows="3"></textarea>
+          </div>
+          
+          <div class="mb-3">
+            <label for="status" class="form-label">Zmeniť status klienta (voliteľné)</label>
+            <select class="form-select" id="status">
+              <option value="">Nemeniť</option>
+              <option value="Aktívny">Aktívny</option>
+              <option value="Záujemca">Záujemca</option>
+              <option value="Kontaktovaný">Kontaktovaný</option>
+              <option value="Nedostupný">Nedostupný</option>
+              <option value="Odmietol">Odmietol</option>
+            </select>
+          </div>
+          
+          <button type="submit" class="btn btn-primary" id="saveCallButton">Uložiť hovor</button>
+          <button type="button" class="btn btn-secondary" id="cancelEditButton" style="display: none;">Zrušiť úpravy</button>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Modálne okno pre potvrdenie vymazania -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Potvrdenie vymazania</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>Naozaj chcete vymazať tento záznam hovoru?</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zrušiť</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteButton">Vymazať</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modálne okno pre zobrazenie celej poznámky -->
+    <div id="noteModal" class="note-modal">
+      <div class="note-modal-content">
+        <span class="note-modal-close">&times;</span>
+        <h4 class="note-modal-title">Poznámka</h4>
+        <div class="note-modal-body" id="noteModalBody"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      let clients = [];
+      let calls = [];
+      let deleteCallId = null;
+      let currentPage = 1;
+      const itemsPerPage = 50;
+      const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+      
+      // Referenčné objekty
+      const clientsTableBody = document.getElementById('clientsTableBody');
+      const callsTableBody = document.getElementById('callsTableBody');
+      const clientIdSelect = document.getElementById('clientId');
+      const newCallForm = document.getElementById('newCallForm');
+      const cancelEditButton = document.getElementById('cancelEditButton');
+      const newCallTitle = document.getElementById('newCallTitle');
+      const editCallId = document.getElementById('editCallId');
+      const saveCallButton = document.getElementById('saveCallButton');
+      const paginationContainer = document.getElementById('pagination');
+      const displayedClientsSpan = document.getElementById('displayedClients');
+      const totalClientsSpan = document.getElementById('totalClients');
+      
+      // Prepínanie záložiek
+      document.querySelectorAll('#mainTabs a').forEach(tab => {
+        tab.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // Ak prepíname na inú záložku a editujeme, zrušíme editáciu
+          if (editCallId.value && this.getAttribute('data-tab') !== 'newCall') {
+            resetCallForm();
+          }
+          
+          document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('show', 'active'));
+          document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+          
+          this.classList.add('active');
+          const tabId = this.getAttribute('href');
+          document.querySelector(tabId).classList.add('show', 'active');
+        });
+      });
+      
+      // Načítanie dát
+      async function loadData() {
+        try {
+          // Načítanie klientov
+          const clientsResponse = await fetch('/api/clients');
+          clients = await clientsResponse.json();
+          
+          // Nastavenie celkového počtu klientov
+          totalClientsSpan.textContent = clients.length;
+          
+          // Zobrazenie klientov na prvej stránke
+          displayClientPage(1);
+          setupPagination(clients.length);
+          
+          // Naplnenie select boxu
+          populateClientSelect();
+          
+          // Načítanie hovorov
+          const callsResponse = await fetch('/api/calls');
+          calls = await callsResponse.json();
+          displayCalls(calls);
+        } catch (error) {
+          console.error('Chyba pri načítaní dát:', error);
+        }
+      }
+      
+      // Nastavenie stránkovania
+      function setupPagination(totalItems) {
+        paginationContainer.innerHTML = '';
+        
+        // Výpočet celkového počtu strán
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        
+        if (totalPages <= 1) return;
+        
+        // Tlačidlo pre predchádzajúcu stránku
+        const prevButton = document.createElement('button');
+        prevButton.innerHTML = '&laquo;';
+        prevButton.disabled = currentPage === 1;
+        prevButton.addEventListener('click', () => {
+          if (currentPage > 1) {
+            displayClientPage(currentPage - 1);
+          }
+        });
+        paginationContainer.appendChild(prevButton);
+        
+        // Určenie rozsahu zobrazených strán
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        
+        // Zabezpečenie zobrazenia aspoň 5 strán (ak sú k dispozícii)
+        if (endPage - startPage < 4) {
+          startPage = Math.max(1, endPage - 4);
+        }
+        
+        // Tlačidlá pre jednotlivé stránky
+        for (let i = startPage; i <= endPage; i++) {
+          const pageButton = document.createElement('button');
+          pageButton.textContent = i;
+          pageButton.classList.toggle('active', i === currentPage);
+          pageButton.addEventListener('click', () => displayClientPage(i));
+          paginationContainer.appendChild(pageButton);
+        }
+        
+        // Tlačidlo pre nasledujúcu stránku
+        const nextButton = document.createElement('button');
+        nextButton.innerHTML = '&raquo;';
+        nextButton.disabled = currentPage === totalPages;
+        nextButton.addEventListener('click', () => {
+          if (currentPage < totalPages) {
+            displayClientPage(currentPage + 1);
+          }
+        });
+        paginationContainer.appendChild(nextButton);
+      }
+      
+      // Zobrazenie konkrétnej stránky s klientmi
+      function displayClientPage(page) {
+        currentPage = page;
+        
+        // Výpočet indexov pre aktuálnu stránku
+        const startIndex = (page - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, clients.length);
+        
+        // Zobrazenie len klientov pre danú stránku
+        const clientsToDisplay = clients.slice(startIndex, endIndex);
+        displayClients(clientsToDisplay);
+        
+        // Aktualizácia informácií o zobrazených položkách
+        displayedClientsSpan.textContent = clientsToDisplay.length;
+        
+        // Aktualizácia stránkovania
+        setupPagination(clients.length);
+      }
+      
+      // Zobrazenie klientov v tabuľke
+      function displayClients(clientsToDisplay) {
+        clientsTableBody.innerHTML = '';
+        
+        clientsToDisplay.forEach((client, index) => {
+          const row = document.createElement('tr');
+          row.classList.add('client-row');
+          const address = client.adresa || '-';
+          const note = client.Poznámka || '-';
+          const isOdd = index % 2 !== 0;
+          
+          row.innerHTML = `
+            <td class="fw-medium sticky-col ${isOdd ? 'shade' : ''}">${client.id}</td>
+            <td class="sticky-col ${isOdd ? 'shade' : ''}"><strong>${client.Firma || '-'}</strong></td>
+            <td>${client.Telefón ? `<a href="tel:${client.Telefón}" class="text-decoration-none">${client.Telefón}</a>` : '-'}</td>
+            <td>${client.Mail ? `<a href="mailto:${client.Mail}" class="text-decoration-none">${client.Mail}</a>` : '-'}</td>
+            <td class="address-cell" title="${address}">${address}</td>
+            <td>${client.web ? `<a href="${client.web}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-link-45deg"></i></a>` : '-'}</td>
+            <td class="note-cell"><div class="note-content" onclick="showNoteModal('${encodeURIComponent(note)}')">${note}</div></td>
+            <td><span class="badge bg-${client.status === 'Aktívny' ? 'success' : client.status === 'Nedostupný' ? 'danger' : 'warning'}">${client.status || 'Aktívny'}</span></td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn btn-sm btn-primary" onclick="selectClientForCall('${client.id}')"><i class="bi bi-telephone"></i></button>
+                <button class="btn btn-sm btn-info text-white" onclick="viewCallHistory('${client.id}', '${client.Firma}')"><i class="bi bi-clock-history"></i></button>
+              </div>
+            </td>
+          `;
+          clientsTableBody.appendChild(row);
+        });
+      }
+      
+      // Zobrazenie histórie hovorov v tabuľke
+      function displayCalls(callsToDisplay) {
+        callsTableBody.innerHTML = '';
+        
+        callsToDisplay.forEach(call => {
+          const clientName = clients.find(c => c.id == call.clientId)?.Firma || 'Neznámy klient';
+          const formattedDate = new Date(call.date).toLocaleString('sk-SK');
+          
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td class="fw-medium">${call.id}</td>
+            <td><strong>${clientName}</strong></td>
+            <td><i class="bi bi-calendar3"></i> ${formattedDate}</td>
+            <td class="text-center">${call.duration} <small class="text-muted">min</small></td>
+            <td class="truncate" title="${call.notes || '-'}">${call.notes || '-'}</td>
+            <td><span class="badge bg-${call.outcome === 'Úspešný' ? 'success' : call.outcome === 'Neúspešný' ? 'danger' : 'warning'}">${call.outcome}</span></td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn btn-sm btn-warning text-dark" onclick="editCall(${call.id})"><i class="bi bi-pencil"></i></button>
+                <button class="btn btn-sm btn-danger" onclick="confirmDeleteCall(${call.id})"><i class="bi bi-trash"></i></button>
+              </div>
+            </td>
+          `;
+          callsTableBody.appendChild(row);
+        });
+      }
+      
+      // Naplnenie select boxu s klientmi
+      function populateClientSelect() {
+        clientIdSelect.innerHTML = '<option value="">Vyberte klienta</option>';
+        
+        clients.forEach(client => {
+          const option = document.createElement('option');
+          option.value = client.id;
+          option.textContent = `${client.Firma} (ID: ${client.id})`;
+          clientIdSelect.appendChild(option);
+        });
+      }
+      
+      // Aktualizácia statusu klienta
+      async function updateClientStatus(clientId, status) {
+        try {
+          const response = await fetch(`/api/clients/${clientId}/status`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status })
+          });
+          
+          if (!response.ok) {
+            throw new Error('Server vrátil chybu');
+          }
+          
+          const updatedClient = await response.json();
+          
+          // Aktualizácia klienta v zozname
+          const clientIndex = clients.findIndex(c => c.id == clientId);
+          if (clientIndex !== -1) {
+            clients[clientIndex] = updatedClient;
+            displayClients(clients);
+          }
+        } catch (error) {
+          console.error('Chyba pri aktualizácii statusu:', error);
+        }
+      }
+      
+      // Resetovanie formulára pre nový hovor
+      function resetCallForm() {
+        newCallForm.reset();
+        editCallId.value = '';
+        cancelEditButton.style.display = 'none';
+        newCallTitle.textContent = 'Nový hovor';
+        saveCallButton.textContent = 'Uložiť hovor';
+        
+        // Nastavenie aktuálneho dátumu a času
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        document.getElementById('date').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+      }
+      
+      // Spracovanie formulára pre hovor
+      newCallForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = {
+          clientId: document.getElementById('clientId').value,
+          date: document.getElementById('date').value || new Date().toISOString(),
+          duration: document.getElementById('duration').value,
+          notes: document.getElementById('notes').value,
+          outcome: document.getElementById('outcome').value
+        };
+        
+        try {
+          let response;
+          let isEdit = false;
+          
+          // Určenie, či ide o nový alebo editovaný hovor
+          if (editCallId.value) {
+            // Editácia existujúceho hovoru
+            isEdit = true;
+            response = await fetch(`/api/calls/${editCallId.value}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(formData)
+            });
+          } else {
+            // Vytvorenie nového hovoru
+            response = await fetch('/api/calls', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(formData)
+            });
+          }
+          
+          if (!response.ok) {
+            throw new Error('Server vrátil chybu');
+          }
+          
+          const result = await response.json();
+          console.log(isEdit ? 'Hovor aktualizovaný:' : 'Nový hovor uložený:', result);
+          
+          // Aktualizácia statusu klienta, ak je zvolený
+          const status = document.getElementById('status').value;
+          if (status) {
+            await updateClientStatus(formData.clientId, status);
+          }
+          
+          // Resetovanie formulára
+          resetCallForm();
+          
+          // Obnovenie dát
+          loadData();
+          
+          // Prepnutie na záložku s hovormi
+          document.querySelector(`#mainTabs a[data-tab="calls"]`).click();
+          
+        } catch (error) {
+          console.error('Chyba pri ukladaní hovoru:', error);
+          alert('Nastala chyba pri ukladaní hovoru. Skúste to prosím znova.');
+        }
+      });
+      
+      // Potvrdenie vymazania hovoru
+      window.confirmDeleteCall = function(callId) {
+        deleteCallId = callId;
+        deleteModal.show();
+      };
+      
+      // Vymazanie hovoru po potvrdení
+      document.getElementById('confirmDeleteButton').addEventListener('click', async function() {
+        if (!deleteCallId) return;
+        
+        try {
+          const response = await fetch(`/api/calls/${deleteCallId}`, {
+            method: 'DELETE'
+          });
+          
+          if (!response.ok) {
+            throw new Error('Server vrátil chybu');
+          }
+          
+          const result = await response.json();
+          console.log('Hovor vymazaný:', result);
+          
+          // Zatvorenie modálneho okna
+          deleteModal.hide();
+          
+          // Obnovenie dát
+          loadData();
+          
+        } catch (error) {
+          console.error('Chyba pri vymazávaní hovoru:', error);
+          alert('Nastala chyba pri vymazávaní hovoru. Skúste to prosím znova.');
+        }
+      });
+      
+      // Úprava hovoru
+      window.editCall = function(callId) {
+        const call = calls.find(c => c.id === callId);
+        if (!call) return;
+        
+        // Nastavenie údajov do formulára
+        document.getElementById('clientId').value = call.clientId;
+        
+        // Formátovanie dátumu pre input typu datetime-local
+        const dateObj = new Date(call.date);
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const hours = String(dateObj.getHours()).padStart(2, '0');
+        const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+        
+        document.getElementById('date').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        document.getElementById('duration').value = call.duration;
+        document.getElementById('notes').value = call.notes || '';
+        document.getElementById('outcome').value = call.outcome;
+        document.getElementById('status').value = '';
+        
+        // Nastavenie režimu úpravy
+        editCallId.value = call.id;
+        cancelEditButton.style.display = 'inline-block';
+        newCallTitle.textContent = 'Upraviť hovor';
+        saveCallButton.textContent = 'Uložiť zmeny';
+        
+        // Prepnutie na záložku s formulárom
+        document.querySelector(`#mainTabs a[data-tab="newCall"]`).click();
+      };
+      
+      // Zrušenie úprav
+      cancelEditButton.addEventListener('click', function() {
+        resetCallForm();
+      });
+      
+      // Vyhľadávanie klientov
+      document.getElementById('searchButton').addEventListener('click', function() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        
+        if (!searchTerm.trim()) {
+          // Ak je vyhľadávanie prázdne, zobrazíme všetkých klientov
+          currentPage = 1;
+          displayClientPage(1);
+          return;
+        }
+        
+        const filteredClients = clients.filter(client => {
+          const firma = (client.Firma || '').toLowerCase();
+          const telefon = (client.Telefón || '').toLowerCase();
+          const email = (client.Mail || '').toLowerCase();
+          const poznamka = (client.Poznámka || '').toLowerCase();
+          const adresa = (client.adresa || '').toLowerCase();
+          
+          return firma.includes(searchTerm) || 
+                 telefon.includes(searchTerm) || 
+                 email.includes(searchTerm) || 
+                 poznamka.includes(searchTerm) || 
+                 adresa.includes(searchTerm);
+        });
+        
+        // Aktualizácia zobrazenia s filtrovanými výsledkami
+        totalClientsSpan.textContent = filteredClients.length;
+        displayedClientsSpan.textContent = Math.min(filteredClients.length, itemsPerPage);
+        
+        // Zobrazenie prvej stránky výsledkov
+        currentPage = 1;
+        const clientsToDisplay = filteredClients.slice(0, itemsPerPage);
+        displayClients(clientsToDisplay);
+        setupPagination(filteredClients.length);
+      });
+      
+      // Zobrazenie histórie hovorov pre konkrétneho klienta
+      window.viewCallHistory = function(clientId, clientName) {
+        const clientCalls = calls.filter(call => call.clientId == clientId);
+        
+        if (clientCalls.length === 0) {
+          callsTableBody.innerHTML = '<tr><td colspan="7" class="text-center">Žiadne hovory pre tohto klienta</td></tr>';
+        } else {
+          displayCalls(clientCalls);
+        }
+        
+        // Zmena názvu záložky
+        document.querySelector('#callHistoryContainer h3').innerHTML = `
+          <div class="call-history-title">
+            <span>História hovorov pre: Klienta ${clientName}</span>
+            <button class="btn btn-sm btn-secondary" onclick="loadData()">Zobraziť všetky hovory</button>
+          </div>
+        `;
+        
+        // Prepnutie na záložku s hovormi
+        document.querySelector(`#mainTabs a[data-tab="calls"]`).click();
+      };
+      
+      // Výber klienta pre nový hovor
+      window.selectClientForCall = function(clientId) {
+        resetCallForm();
+        document.getElementById('clientId').value = clientId;
+        document.querySelector(`#mainTabs a[data-tab="newCall"]`).click();
+      };
+      
+      // Nastavenie aktuálneho dátumu a času pri načítaní
+      resetCallForm();
+      
+      // Načítanie dát pri načítaní stránky
+      loadData();
+      
+      // Funkcia pre zobrazenie modálneho okna s poznámkou
+      window.showNoteModal = function(noteEncoded) {
+        const note = decodeURIComponent(noteEncoded);
+        const modal = document.getElementById('noteModal');
+        const modalBody = document.getElementById('noteModalBody');
+        
+        modalBody.textContent = note;
+        modal.style.display = 'block';
+        
+        // Zatvorenie modálneho okna po kliknutí na krížik
+        document.querySelector('.note-modal-close').onclick = function() {
+          modal.style.display = 'none';
+        };
+        
+        // Zatvorenie modálneho okna po kliknutí mimo neho
+        window.onclick = function(event) {
+          if (event.target === modal) {
+            modal.style.display = 'none';
+          }
+        };
+      };
+    });
+  </script>
+</body>
+</html> 

@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(AGENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  calls     Call[]
+  notes     Note[]
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  AGENT
+}
+
+model Client {
+  id          String   @id @default(cuid())
+  name        String
+  companyName String?
+  phone       String?
+  email       String?
+  status      Status   @default(NEW)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  calls       Call[]
+  notes       Note[]
+}
+
+enum Status {
+  NEW
+  CONTACTED
+  INTERESTED
+  NOT_INTERESTED
+  FOLLOW_UP
+  CONVERTED
+  INACTIVE
+}
+
+model Call {
+  id         String    @id @default(cuid())
+  date       DateTime  @default(now())
+  duration   Int?      // in seconds
+  outcome    Outcome
+  scriptUsed String?   // Script ID if a script was used
+  client     Client    @relation(fields: [clientId], references: [id])
+  clientId   String
+  user       User      @relation(fields: [userId], references: [id])
+  userId     String
+  notes      Note[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+enum Outcome {
+  SUCCESSFUL
+  UNSUCCESSFUL
+  VOICEMAIL
+  NO_ANSWER
+  WRONG_NUMBER
+  FOLLOW_UP
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  content   String
+  client    Client   @relation(fields: [clientId], references: [id])
+  clientId  String
+  call      Call?    @relation(fields: [callId], references: [id])
+  callId    String?
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CallScript {
+  id          String   @id @default(cuid())
+  title       String
+  content     String   @db.Text
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PerformanceMetric {
+  id          String   @id @default(cuid())
+  date        DateTime @default(now())
+  callsMade   Int      @default(0)
+  conversions Int      @default(0)
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+} 
