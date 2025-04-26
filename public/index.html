@@ -558,10 +558,10 @@
         setupPagination(clients.length);
       }
       
-      // Zobrazenie klientov v tabuľke
+      // Funkcia na zobrazenie klientov v tabuľke
       function displayClients(clientsToDisplay) {
         clientsTableBody.innerHTML = '';
-        
+
         clientsToDisplay.forEach((client, index) => {
           const row = document.createElement('tr');
           row.classList.add('client-row');
@@ -815,7 +815,19 @@
       // Vyhľadávanie klientov
       document.getElementById('searchButton').addEventListener('click', function() {
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        
+        searchClients(searchTerm);
+      });
+      
+      // Pridať event na stlačenie klávesy Enter v inpute pre vyhľadávanie
+      document.getElementById('searchInput').addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+          const searchTerm = this.value.toLowerCase();
+          searchClients(searchTerm);
+        }
+      });
+      
+      // Funkcia pre vyhľadávanie klientov
+      function searchClients(searchTerm) {
         if (!searchTerm.trim()) {
           // Ak je vyhľadávanie prázdne, zobrazíme všetkých klientov
           currentPage = 1;
@@ -824,29 +836,25 @@
         }
         
         const filteredClients = clients.filter(client => {
-          const firma = (client.Firma || '').toLowerCase();
-          const telefon = (client.Telefón || '').toLowerCase();
-          const email = (client.Mail || '').toLowerCase();
-          const poznamka = (client.Poznámka || '').toLowerCase();
-          const adresa = (client.adresa || '').toLowerCase();
-          
-          return firma.includes(searchTerm) || 
-                 telefon.includes(searchTerm) || 
-                 email.includes(searchTerm) || 
-                 poznamka.includes(searchTerm) || 
-                 adresa.includes(searchTerm);
+          return (
+            (client.Firma || '').toLowerCase().includes(searchTerm) || 
+            (client.Telefón || '').toString().toLowerCase().includes(searchTerm) || 
+            (client.Mail || '').toLowerCase().includes(searchTerm) || 
+            (client.Poznámka || '').toLowerCase().includes(searchTerm) || 
+            (client.adresa || '').toLowerCase().includes(searchTerm) ||
+            (client.status || '').toLowerCase().includes(searchTerm)
+          );
         });
         
         // Aktualizácia zobrazenia s filtrovanými výsledkami
         totalClientsSpan.textContent = filteredClients.length;
         displayedClientsSpan.textContent = Math.min(filteredClients.length, itemsPerPage);
         
-        // Zobrazenie prvej stránky výsledkov
+        // Zobrazenie výsledkov
         currentPage = 1;
-        const clientsToDisplay = filteredClients.slice(0, itemsPerPage);
-        displayClients(clientsToDisplay);
+        displayClients(filteredClients);
         setupPagination(filteredClients.length);
-      });
+      }
       
       // Zobrazenie histórie hovorov pre konkrétneho klienta
       window.viewCallHistory = function(clientId, clientName) {
