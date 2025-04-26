@@ -1,70 +1,56 @@
 # Systém pre navolávanie klientov
 
-Jednoduchý systém pre správu klientov a záznamov hovorov s prehľadným webovým rozhraním.
+Jednoduchý CRM systém pre správu klientov a zaznamenávanie telefonických hovorov. Aplikácia umožňuje vyhľadávanie v databáze klientov, vedenie záznamov o hovoroch a jednoduché štatistiky.
 
 ## Funkcie
 
-- Zobrazenie a filtrovanie zoznamu klientov
-- Prehľadná práca so záznamami hovorov
-- Stránkovanie výsledkov (50 záznamov na stránku)
-- Podpora pre veľké datasety (1800+ klientov)
-- Responzívny dizajn
+- Prehľadná databáza klientov s možnosťou vyhľadávania
+- Zaznamenávanie histórie hovorov
+- Aktualizácia statusov klientov
+- Responzívne používateľské rozhranie
+- Filtrovanie a stránkovanie výsledkov
 
 ## Technológie
 
-- **Backend**: Node.js, Express
-- **Frontend**: HTML, CSS, JavaScript, Bootstrap 5
-- **Dáta**: CSV/XLSX import
+- Node.js + Express
+- Vanilla JavaScript + Bootstrap 5 pre frontend
+- XLSX pre načítavanie údajov z Excelu
+- CORS pre cross-origin komunikáciu
 
-## Inštalácia a spustenie
+## Inštalácia
 
-### Lokálne spustenie
-
-1. Naklonujte repozitár:
+1. Klonujte repozitár
    ```
-   git clone <repository-url>
-   cd system-pre-navolavanie
+   git clone https://github.com/zonabxxx/system-pre-navolavanie.git
    ```
 
-2. Nainštalujte závislosti:
+2. Nainštalujte závislosti
    ```
    npm install
    ```
 
-3. Spustite server:
+3. Spustite aplikáciu
    ```
    npm start
    ```
 
-4. Navštívte aplikáciu na `http://localhost:4000`
+4. Otvorte prehliadač a prejdite na `http://localhost:4000`
 
-### Vývojové prostredie
-
-Pre vývojové prostredie s automatickým reštartom servera použite:
-```
-npm run dev
-```
-
-## Nasadenie na Railway
-
-1. Vytvorte účet na [Railway](https://railway.app/)
-
-2. Pripojte svoj GitHub repozitár:
-   - V Railway dashboarde kliknite na "New Project"
-   - Vyberte "Deploy from GitHub repo"
-   - Vyberte váš repozitár
-
-3. Railway automaticky rozpozná Node.js projekt a nasadí ho
-
-4. Po nasadení nájdete URL vašej aplikácie v Railway dashboarde
-
-## Štruktúra súborov
+## Štruktúra projektu
 
 - `server.js` - hlavný súbor servera
-- `public/` - adresár s front-end súbormi
+- `public/` - klientska časť aplikácie
   - `index.html` - hlavná stránka aplikácie
 - `Porovnanie_v_etk_ch__dajov.csv` - zdrojové dáta klientov
+- `calls.json` - úložisko pre záznamy hovorov
+
+## Nedávne zmeny
+
+- Opravený vyhľadávací mechanizmus
+- Vylepšené zobrazovanie záznamov v tabuľke
+- Pridaná podpora pre stránkovanie výsledkov
+- Vylepšené UX/UI pre prácu s hovormi
 
 ## Licencia
 
-Tento projekt je licencovaný pod MIT licenciou. 
+MIT 
