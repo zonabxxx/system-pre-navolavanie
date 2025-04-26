@@ -115,6 +115,38 @@
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
       max-width: 100%;
       padding-bottom: 10px;
+      position: relative;
+    }
+    
+    /* Indikátor horizontálneho skrolovania */
+    .scroll-indicator {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: rgba(13, 110, 253, 0.9);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      z-index: 100;
+      cursor: pointer;
+      animation: pulse 1.5s infinite;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .scroll-indicator i {
+      margin-left: 5px;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 0.7; }
+      50% { opacity: 1; }
+      100% { opacity: 0.7; }
     }
     
     .sticky-col {
@@ -188,15 +220,15 @@
     }
     
     /* Pridajte doplnkové veľkosti pre stĺpce */
-    .col-id { width: 40px; min-width: 40px; }
-    .col-firma { width: 200px; min-width: 150px; }
-    .col-telefon { width: 120px; min-width: 110px; }
-    .col-email { width: 180px; min-width: 150px; }
-    .col-address { width: 220px; min-width: 180px; }
+    .col-id { width: 50px; min-width: 50px; }
+    .col-firma { width: 200px; min-width: 200px; }
+    .col-telefon { width: 150px; min-width: 150px; }
+    .col-email { width: 200px; min-width: 200px; }
+    .col-address { width: 250px; min-width: 250px; }
     .col-web { width: 60px; min-width: 60px; }
-    .col-poznamka { width: 180px; min-width: 150px; }
-    .col-status { width: 90px; min-width: 90px; }
-    .col-akcie { width: 110px; min-width: 110px; }
+    .col-poznamka { width: 200px; min-width: 200px; }
+    .col-status { width: 100px; min-width: 100px; }
+    .col-akcie { width: 120px; min-width: 120px; }
     
     .badge {
       font-weight: 500;
@@ -217,7 +249,8 @@
       margin-bottom: 0;
       border-collapse: separate;
       border-spacing: 0;
-      min-width: 1200px; /* Minimálna šírka, aby sa zabezpečilo scrollovanie */
+      width: 100%;
+      table-layout: fixed; /* Pevná šírka stĺpcov */
     }
     
     table.table thead th {
@@ -239,6 +272,17 @@
       vertical-align: middle;
       padding: 12px;
       border-top: 1px solid #f0f0f0;
+    }
+    
+    /* Dodatočné štýly pre responsívnosť */
+    @media (max-width: 768px) {
+      .table-container {
+        overflow-x: auto;
+      }
+      
+      table.table {
+        min-width: 1200px; /* Minimálna šírka, aby sa zabezpečilo scrollovanie */
+      }
     }
   </style>
 </head>
@@ -275,6 +319,9 @@
           </div>
           <div class="card-body">
             <div class="table-container">
+              <div class="scroll-indicator" id="scrollIndicator" title="Skrolovať doprava">
+                Viac údajov <i class="bi bi-arrow-right"></i>
+              </div>
               <table class="table table-hover table-striped" id="clientsTable">
                 <thead>
                   <tr>
@@ -428,7 +475,7 @@
       let calls = [];
       let deleteCallId = null;
       let currentPage = 1;
-      const itemsPerPage = 50;
+      const itemsPerPage = 20;
       const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
       
       // Referenčné objekty
@@ -912,6 +959,39 @@
           }
         };
       };
+      
+      // Indikátor horizontálneho skrolovania
+      const tableContainer = document.querySelector('.table-container');
+      const scrollIndicator = document.getElementById('scrollIndicator');
+      
+      // Kontrola, či je potrebné skrolovanie
+      function checkScrollIndicator() {
+        if (tableContainer.scrollWidth > tableContainer.clientWidth) {
+          scrollIndicator.style.display = 'flex';
+        } else {
+          scrollIndicator.style.display = 'none';
+        }
+        
+        // Skrytie indikátora, ak sme preskrolovali viac ako 80% šírky
+        if (tableContainer.scrollLeft > (tableContainer.scrollWidth - tableContainer.clientWidth) * 0.8) {
+          scrollIndicator.style.display = 'none';
+        }
+      }
+      
+      // Skrolovanie kliknutím na indikátor
+      scrollIndicator.addEventListener('click', function() {
+        tableContainer.scrollBy({ 
+          left: 300, 
+          behavior: 'smooth' 
+        });
+      });
+      
+      // Kontrola pri načítaní a zmene veľkosti okna
+      window.addEventListener('load', checkScrollIndicator);
+      window.addEventListener('resize', checkScrollIndicator);
+      
+      // Kontrola pri skrolovaní
+      tableContainer.addEventListener('scroll', checkScrollIndicator);
     });
   </script>
 </body>
