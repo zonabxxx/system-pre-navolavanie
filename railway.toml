@@ -1,0 +1,12 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = ".railway/build.sh"
+
+[deploy]
+startCommand = "node server.js"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+
+[phases.setup]
+nixPkgs = ["nodejs"] 
