@@ -120,10 +120,9 @@
     
     /* Indikátor horizontálneho skrolovania */
     .scroll-indicator {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
       background-color: rgba(13, 110, 253, 0.9);
       color: white;
       padding: 8px 12px;
@@ -968,12 +967,14 @@
       function checkScrollIndicator() {
         if (tableContainer.scrollWidth > tableContainer.clientWidth) {
           scrollIndicator.style.display = 'flex';
+          
+          // Skrytie indikátora, ak sme preskrolovali viac ako 80% šírky
+          if (tableContainer.scrollLeft > (tableContainer.scrollWidth - tableContainer.clientWidth) * 0.8) {
+            scrollIndicator.style.opacity = '0.3';
+          } else {
+            scrollIndicator.style.opacity = '1';
+          }
         } else {
-          scrollIndicator.style.display = 'none';
-        }
-        
-        // Skrytie indikátora, ak sme preskrolovali viac ako 80% šírky
-        if (tableContainer.scrollLeft > (tableContainer.scrollWidth - tableContainer.clientWidth) * 0.8) {
           scrollIndicator.style.display = 'none';
         }
       }
